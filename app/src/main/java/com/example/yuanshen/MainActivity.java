@@ -824,43 +824,30 @@ public final class MainActivity extends AppCompatActivity {
                 sortOrder.setScaleType(ImageView.ScaleType.CENTER);
                 sortOrder.setPadding(dp(9), dp(9), dp(9), dp(9));
                 sortOrder.setBackgroundResource(R.drawable.bg_statistics_sort_order);
-                sortOrder.setOnClickListener(view -> {
-                    if (descendingFiveStarPools.contains(pool)) {
-                        descendingFiveStarPools.remove(pool);
-                    } else {
-                        descendingFiveStarPools.add(pool);
-                    }
-                    renderCurrentPage();
-                });
                 fiveStarHeading.addView(sortOrder, new LinearLayout.LayoutParams(dp(40), dp(40)));
                 content.addView(fiveStarHeading);
 
                 LinearLayout fiveStarRecords = new LinearLayout(this);
                 fiveStarRecords.setOrientation(LinearLayout.VERTICAL);
                 fiveStarRecords.setVisibility(initiallyExpanded ? View.VISIBLE : View.GONE);
-                List<GachaRecord> orderedRecords = new ArrayList<>(statistics.getFiveStarRecords());
-                if (timeDescending) Collections.reverse(orderedRecords);
-                for (GachaRecord record : orderedRecords) {
-                    LinearLayout recordRow = new LinearLayout(this);
-                    recordRow.setOrientation(LinearLayout.HORIZONTAL);
-                    recordRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
-                    recordRow.setPadding(0, dp(3), 0, dp(3));
-
-                    TextView name = text("★  " + record.getName(), 14, 0xFF9D661A);
-                    name.setSingleLine(true);
-                    name.setEllipsize(android.text.TextUtils.TruncateAt.END);
-                    recordRow.addView(name, new LinearLayout.LayoutParams(
-                            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-
-                    TextView time = text(record.getTime(), 13, 0xFF5D6878);
-                    time.setGravity(android.view.Gravity.END);
-                    time.setPadding(dp(12), 0, 0, 0);
-                    recordRow.addView(time, new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT));
-                    fiveStarRecords.addView(recordRow);
-                }
+                populateFiveStarRecords(fiveStarRecords, statistics.getFiveStarRecords(), timeDescending);
                 content.addView(fiveStarRecords);
+                sortOrder.setOnClickListener(view -> {
+                    boolean descending;
+                    if (descendingFiveStarPools.contains(pool)) {
+                        descendingFiveStarPools.remove(pool);
+                        descending = false;
+                    } else {
+                        descendingFiveStarPools.add(pool);
+                        descending = true;
+                    }
+                    sortOrder.setScaleY(descending ? -1f : 1f);
+                    sortOrder.setContentDescription(descending
+                            ? "当前时间倒序，点击切换为正序"
+                            : "当前时间正序，点击切换为倒序");
+                    populateFiveStarRecords(
+                            fiveStarRecords, statistics.getFiveStarRecords(), descending);
+                });
                 heading.setOnClickListener(view -> {
                     boolean expanding = fiveStarRecords.getVisibility() != View.VISIBLE;
                     if (expanding) {
@@ -875,6 +862,36 @@ public final class MainActivity extends AppCompatActivity {
         }
         card.addView(content);
         return card;
+    }
+
+    private void populateFiveStarRecords(
+            LinearLayout container,
+            List<GachaRecord> records,
+            boolean timeDescending
+    ) {
+        container.removeAllViews();
+        List<GachaRecord> orderedRecords = new ArrayList<>(records);
+        if (timeDescending) Collections.reverse(orderedRecords);
+        for (GachaRecord record : orderedRecords) {
+            LinearLayout recordRow = new LinearLayout(this);
+            recordRow.setOrientation(LinearLayout.HORIZONTAL);
+            recordRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            recordRow.setPadding(0, dp(3), 0, dp(3));
+
+            TextView name = text("★  " + record.getName(), 14, 0xFF9D661A);
+            name.setSingleLine(true);
+            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            recordRow.addView(name, new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            TextView time = text(record.getTime(), 13, 0xFF5D6878);
+            time.setGravity(android.view.Gravity.END);
+            time.setPadding(dp(12), 0, 0, 0);
+            recordRow.addView(time, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            container.addView(recordRow);
+        }
     }
 
     private View createMetric(String label, String value, int valueColor) {
