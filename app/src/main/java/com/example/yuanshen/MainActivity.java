@@ -104,7 +104,7 @@ public final class MainActivity extends AppCompatActivity {
     private AppScreen currentScreen;
     private int currentPageId = R.id.nav_overview;
     private int historyFilterPosition;
-    private boolean statisticsTimeDescending;
+    private final Set<GachaPool> descendingFiveStarPools = EnumSet.noneOf(GachaPool.class);
     private final Set<GachaPool> expandedFiveStarPools = EnumSet.noneOf(GachaPool.class);
     private GachaRecordAdapter.DisplayMode historyDisplayMode =
             GachaRecordAdapter.DisplayMode.CARD;
@@ -799,6 +799,7 @@ public final class MainActivity extends AppCompatActivity {
             if (!statistics.getFiveStarRecords().isEmpty()) {
                 int fiveStarCount = statistics.getFiveStarRecords().size();
                 boolean initiallyExpanded = expandedFiveStarPools.contains(pool);
+                boolean timeDescending = descendingFiveStarPools.contains(pool);
                 LinearLayout fiveStarHeading = new LinearLayout(this);
                 fiveStarHeading.setOrientation(LinearLayout.HORIZONTAL);
                 fiveStarHeading.setGravity(android.view.Gravity.CENTER_VERTICAL);
@@ -816,15 +817,19 @@ public final class MainActivity extends AppCompatActivity {
 
                 ImageButton sortOrder = new ImageButton(this);
                 sortOrder.setImageResource(R.drawable.ic_time_sort);
-                sortOrder.setScaleY(statisticsTimeDescending ? -1f : 1f);
-                sortOrder.setContentDescription(statisticsTimeDescending
+                sortOrder.setScaleY(timeDescending ? -1f : 1f);
+                sortOrder.setContentDescription(timeDescending
                         ? "当前时间倒序，点击切换为正序"
                         : "当前时间正序，点击切换为倒序");
                 sortOrder.setScaleType(ImageView.ScaleType.CENTER);
                 sortOrder.setPadding(dp(9), dp(9), dp(9), dp(9));
                 sortOrder.setBackgroundResource(R.drawable.bg_statistics_sort_order);
                 sortOrder.setOnClickListener(view -> {
-                    statisticsTimeDescending = !statisticsTimeDescending;
+                    if (descendingFiveStarPools.contains(pool)) {
+                        descendingFiveStarPools.remove(pool);
+                    } else {
+                        descendingFiveStarPools.add(pool);
+                    }
                     renderCurrentPage();
                 });
                 fiveStarHeading.addView(sortOrder, new LinearLayout.LayoutParams(dp(40), dp(40)));
@@ -834,7 +839,7 @@ public final class MainActivity extends AppCompatActivity {
                 fiveStarRecords.setOrientation(LinearLayout.VERTICAL);
                 fiveStarRecords.setVisibility(initiallyExpanded ? View.VISIBLE : View.GONE);
                 List<GachaRecord> orderedRecords = new ArrayList<>(statistics.getFiveStarRecords());
-                if (statisticsTimeDescending) Collections.reverse(orderedRecords);
+                if (timeDescending) Collections.reverse(orderedRecords);
                 for (GachaRecord record : orderedRecords) {
                     LinearLayout recordRow = new LinearLayout(this);
                     recordRow.setOrientation(LinearLayout.HORIZONTAL);
