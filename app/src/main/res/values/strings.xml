@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">提瓦特祈愿簿</string>
+    <string name="history_mode_card">卡片</string>
+    <string name="history_mode_pity">垫抽</string>
+    <string name="history_year">%1$s年</string>
+    <string name="history_pull_count">%1$d 抽</string>
+    <string name="history_current_pity_description">当前已垫 %1$d 抽</string>
+    <string name="history_record_pity_description">%1$s，%2$d 抽</string>
+    <string name="history_lost_fifty_fifty">歪</string>
+    <string name="history_lost_record_pity_description">%1$s，%2$d 抽，歪</string>
+</resources>

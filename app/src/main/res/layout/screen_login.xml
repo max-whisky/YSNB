@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#F6F2EA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:padding="28dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="提瓦特祈愿簿"
+            android:textColor="#283548"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="登录一次米哈游通行证，自动识别游戏角色；祈愿记录由你手动同步。"
+            android:textColor="#697386"
+            android:textSize="16sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_web_login"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="36dp"
+            android:text="米哈游通行证登录" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:background="#FFF9EE"
+            android:padding="16dp"
+            android:text="无需打开或更新米游社。账号密码只在米哈游官方通行证页面中输入；应用仅保存读取祈愿记录所需的最少登录信息，并使用本机安全密钥加密。网页登录信息读取后会清除，临时访问凭证不会保存或上传。"
+            android:textColor="#675A46"
+            android:textSize="13sp" />
+    </LinearLayout>
+</ScrollView>
