@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -813,21 +814,20 @@ public final class MainActivity extends AppCompatActivity {
                 fiveStarHeading.addView(heading, new LinearLayout.LayoutParams(
                         0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
-                TextView sortOrder = text(statisticsTimeDescending ? "时间倒序" : "时间正序",
-                        13, 0xFF283548);
-                sortOrder.setTypeface(sortOrder.getTypeface(), Typeface.BOLD);
-                sortOrder.setGravity(android.view.Gravity.CENTER);
-                sortOrder.setMinWidth(dp(96));
-                sortOrder.setMinHeight(dp(40));
-                sortOrder.setPadding(dp(14), 0, dp(14), 0);
+                ImageButton sortOrder = new ImageButton(this);
+                sortOrder.setImageResource(R.drawable.ic_time_sort);
+                sortOrder.setScaleY(statisticsTimeDescending ? -1f : 1f);
+                sortOrder.setContentDescription(statisticsTimeDescending
+                        ? "当前时间倒序，点击切换为正序"
+                        : "当前时间正序，点击切换为倒序");
+                sortOrder.setScaleType(ImageView.ScaleType.CENTER);
+                sortOrder.setPadding(dp(9), dp(9), dp(9), dp(9));
                 sortOrder.setBackgroundResource(R.drawable.bg_statistics_sort_order);
-                sortOrder.setClickable(true);
-                sortOrder.setFocusable(true);
                 sortOrder.setOnClickListener(view -> {
                     statisticsTimeDescending = !statisticsTimeDescending;
                     renderCurrentPage();
                 });
-                fiveStarHeading.addView(sortOrder);
+                fiveStarHeading.addView(sortOrder, new LinearLayout.LayoutParams(dp(40), dp(40)));
                 content.addView(fiveStarHeading);
 
                 LinearLayout fiveStarRecords = new LinearLayout(this);
