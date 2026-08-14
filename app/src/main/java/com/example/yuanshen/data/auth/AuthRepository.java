@@ -4,6 +4,7 @@ import com.YSNB.yuanshen.core.model.AuthSession;
 import com.YSNB.yuanshen.core.model.GameRole;
 import com.YSNB.yuanshen.core.model.QrLogin;
 import com.YSNB.yuanshen.core.model.QrLoginStatus;
+import com.YSNB.yuanshen.core.model.SavedAccount;
 import com.YSNB.yuanshen.core.network.MihoyoApi;
 import com.YSNB.yuanshen.core.network.MihoyoCookieParser;
 import java.io.IOException;
@@ -19,7 +20,11 @@ public final class AuthRepository {
         this.credentialStore = credentialStore;
     }
 
-    public AuthSession restoreSession() { return credentialStore.load(); }
+    public List<SavedAccount> getSavedAccounts() { return credentialStore.listAccounts(); }
+
+    public AuthSession restoreSession(String accountId) {
+        return credentialStore.load(accountId);
+    }
 
     public AuthSession acceptWebCookies(List<String> cookieHeaders) {
         Map<String, String> cookies = MihoyoCookieParser.merge(cookieHeaders);
@@ -42,11 +47,30 @@ public final class AuthRepository {
         return api.getRoles(session);
     }
 
+    public String getCommunityNickname(String accountId) throws IOException {
+        return api.getCommunityNickname(accountId);
+    }
+
     public String generateAuthKey(AuthSession session, GameRole role) throws IOException {
         return api.generateAuthKey(session, role);
     }
 
-    public String getSelectedUid() { return credentialStore.getSelectedUid(); }
-    public void setSelectedUid(String uid) { credentialStore.setSelectedUid(uid); }
-    public void logout() { credentialStore.clear(); }
+    public String getActiveAccountId() { return credentialStore.getActiveAccountId(); }
+    public void setActiveAccountId(String accountId) {
+        credentialStore.setActiveAccountId(accountId);
+    }
+    public String getSelectedUid(String accountId) {
+        return credentialStore.getSelectedUid(accountId);
+    }
+    public void setSelectedUid(String accountId, String uid) {
+        credentialStore.setSelectedUid(accountId, uid);
+    }
+    public void setCommunityNickname(String accountId, String communityNickname) {
+        credentialStore.setCommunityNickname(accountId, communityNickname);
+    }
+    public boolean isManualLoginRequired() { return credentialStore.isManualLoginRequired(); }
+    public void setManualLoginRequired(boolean required) {
+        credentialStore.setManualLoginRequired(required);
+    }
+    public void removeAccount(String accountId) { credentialStore.remove(accountId); }
 }

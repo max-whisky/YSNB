@@ -36,6 +36,8 @@ public final class MihoyoApi {
             "https://api-takumi.miyoushe.com/binding/api/genAuthKey";
     private static final String AUTH_KEY_BY_COOKIE_TOKEN =
             "https://passport-api.mihoyo.com/account/binding/api/genAuthKeyByCookieToken";
+    private static final String COMMUNITY_USER_INFO =
+            "https://bbs-api.miyoushe.com/user/wapi/getUserFullInfo";
     private static final String GACHA =
             "https://public-operation-hk4e.mihoyo.com/gacha_info/api/getGachaLog";
 
@@ -127,6 +129,22 @@ public final class MihoyoApi {
             ));
         }
         return roles;
+    }
+
+    public String getCommunityNickname(String accountId) throws IOException {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("uid", accountId);
+        JSONObject result = data(get(
+                COMMUNITY_USER_INFO + "?" + encodeQuery(params),
+                Map.of(
+                        "Accept", "application/json",
+                        "User-Agent", "Mozilla/5.0",
+                        "Referer", "https://www.miyoushe.com/"
+                )
+        ));
+        JSONObject userInfo = result.optJSONObject("user_info");
+        if (userInfo == null) throw new IOException("米游社社区资料不完整");
+        return requiredString(userInfo, "nickname");
     }
 
     public String generateAuthKey(AuthSession session, GameRole role) throws IOException {

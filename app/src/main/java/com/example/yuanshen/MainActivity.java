@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -43,6 +44,7 @@ import com.YSNB.yuanshen.core.model.GachaRecord;
 import com.YSNB.yuanshen.core.model.GachaStatistics;
 import com.YSNB.yuanshen.core.model.GameRole;
 import com.YSNB.yuanshen.core.model.PoolStatistics;
+import com.YSNB.yuanshen.core.model.SavedAccount;
 import com.YSNB.yuanshen.core.network.MihoyoApiConfig;
 import com.YSNB.yuanshen.domain.GachaPityTimelineCalculator;
 import com.YSNB.yuanshen.ui.AppScreen;
@@ -68,6 +70,7 @@ import java.util.Set;
 
 public final class MainActivity extends AppCompatActivity {
     private static final long WEB_LOGIN_COOKIE_CHECK_INTERVAL_MS = 750L;
+    private static final int COLLAPSED_SAVED_ACCOUNT_COUNT = 3;
     private static final String PASSPORT_DESKTOP_USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                     + "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -117,6 +120,11 @@ public final class MainActivity extends AppCompatActivity {
     private Button syncButton;
     private ProgressBar syncProgress;
     private TextView syncStatus;
+    private View savedAccountsSection;
+    private LinearLayout savedAccountsContainer;
+    private Button savedAccountsToggleButton;
+    private Button webLoginButton;
+    private boolean savedAccountsExpanded;
     private boolean updatingRoleSpinner;
     private boolean loginSubmissionInProgress;
     private boolean importingJson;
@@ -197,6 +205,7 @@ public final class MainActivity extends AppCompatActivity {
                 importJsonProgress.setVisibility(importingJson ? View.VISIBLE : View.GONE);
             }
         });
+        viewModel.getSavedAccounts().observe(this, ignored -> renderSavedAccounts());
         viewModel.getMessage().observe(this, this::showMessage);
     }
 
@@ -226,7 +235,73 @@ public final class MainActivity extends AppCompatActivity {
 
     private void renderLoginScreen() {
         View root = inflate(R.layout.screen_login, screenContainer);
-        root.findViewById(R.id.button_web_login).setOnClickListener(v -> viewModel.openWebLogin());
+        savedAccountsExpanded = false;
+        savedAccountsSection = root.findViewById(R.id.saved_accounts_section);
+        savedAccountsContainer = root.findViewById(R.id.saved_accounts_container);
+        savedAccountsToggleButton = root.findViewById(R.id.button_toggle_saved_accounts);
+        webLoginButton = root.findViewById(R.id.button_web_login);
+        savedAccountsToggleButton.setOnClickListener(v -> {
+            savedAccountsExpanded = !savedAccountsExpanded;
+            renderSavedAccounts();
+        });
+        webLoginButton.setOnClickListener(v -> viewModel.openWebLogin());
+        renderSavedAccounts();
+    }
+
+    private void renderSavedAccounts() {
+        if (savedAccountsSection == null || savedAccountsContainer == null
+                || savedAccountsToggleButton == null || webLoginButton == null) return;
+        List<SavedAccount> accounts = viewModel.getSavedAccounts().getValue();
+        if (accounts == null) accounts = Collections.emptyList();
+        boolean hasAccounts = !accounts.isEmpty();
+        savedAccountsSection.setVisibility(hasAccounts ? View.VISIBLE : View.GONE);
+        webLoginButton.setText(hasAccounts ? "登录其他账号" : "米哈游通行证登录");
+        boolean canToggle = accounts.size() > COLLAPSED_SAVED_ACCOUNT_COUNT;
+        if (!canToggle) savedAccountsExpanded = false;
+        savedAccountsToggleButton.setVisibility(canToggle ? View.VISIBLE : View.GONE);
+        if (canToggle) {
+            savedAccountsToggleButton.setText(savedAccountsExpanded
+                    ? "收起"
+                    : "展开全部（共 " + accounts.size() + " 个）");
+        }
+        savedAccountsContainer.removeAllViews();
+        int visibleCount = savedAccountsExpanded
+                ? accounts.size()
+                : Math.min(accounts.size(), COLLAPSED_SAVED_ACCOUNT_COUNT);
+        for (int index = 0; index < visibleCount; index++) {
+            SavedAccount account = accounts.get(index);
+            View item = LayoutInflater.from(this).inflate(
+                    R.layout.item_saved_account, savedAccountsContainer, false);
+            String label = savedAccountLabel(account.getAccountId());
+            String nickname = account.getCommunityNickname();
+            String title = nickname == null || nickname.isBlank()
+                    ? "未设置米游社昵称" : nickname;
+            ((TextView) item.findViewById(R.id.text_saved_account)).setText(title);
+            ((TextView) item.findViewById(R.id.text_saved_account_id)).setText(label);
+            item.setContentDescription("使用" + title + "，" + label + "登录");
+            item.setOnClickListener(v -> viewModel.resumeSavedLogin(account.getAccountId()));
+            item.findViewById(R.id.button_remove_saved_account).setOnClickListener(v ->
+                    confirmRemoveSavedAccount(account));
+            savedAccountsContainer.addView(item);
+        }
+    }
+
+    private void confirmRemoveSavedAccount(SavedAccount account) {
+        String label = savedAccountLabel(account.getAccountId());
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("移除账号")
+                .setMessage("将删除" + label
+                        + "的本机登录信息，已同步的祈愿记录会继续保留。")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("移除", (dialog, which) ->
+                        viewModel.removeSavedAccount(account.getAccountId()))
+                .show();
+    }
+
+    private static String savedAccountLabel(String accountId) {
+        String visibleId = accountId.length() <= 4
+                ? accountId : "••••" + accountId.substring(accountId.length() - 4);
+        return "通行证账号 " + visibleId;
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -943,19 +1018,26 @@ public final class MainActivity extends AppCompatActivity {
         importJsonButton.setOnClickListener(v -> jsonFilePicker.launch(new String[]{
                 "application/json", "text/json", "text/plain", "application/octet-stream"
         }));
-        root.findViewById(R.id.button_logout).setOnClickListener(v ->
-                new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+        root.findViewById(R.id.button_logout).setOnClickListener(v -> {
+            View logoutContent = LayoutInflater.from(this).inflate(R.layout.dialog_logout, null);
+            CheckBox clearCredentials = logoutContent.findViewById(R.id.checkbox_clear_credentials);
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                         .setTitle("退出登录")
-                        .setMessage("将清除本机保存的登录凭证，已同步的抽卡记录会继续保留。")
+                        .setView(logoutContent)
                         .setNegativeButton("取消", null)
-                        .setPositiveButton("退出并清除", (dialog, which) -> {
-                            CookieManager manager = CookieManager.getInstance();
-                            manager.removeAllCookies(ignored -> {
-                                manager.flush();
-                                runOnUiThread(viewModel::logout);
+                        .setPositiveButton("退出登录", (dialog, which) -> {
+                            if (!clearCredentials.isChecked()) {
+                                viewModel.logout(false);
+                                return;
+                            }
+                            CookieManager cookieManager = CookieManager.getInstance();
+                            cookieManager.removeAllCookies(ignored -> {
+                                cookieManager.flush();
+                                runOnUiThread(() -> viewModel.logout(true));
                             });
                         })
-                        .show());
+                        .show();
+        });
     }
 
     private View inflate(int layoutId, FrameLayout parent) {
@@ -1041,6 +1123,10 @@ public final class MainActivity extends AppCompatActivity {
         syncButton = null;
         syncProgress = null;
         syncStatus = null;
+        savedAccountsSection = null;
+        savedAccountsContainer = null;
+        savedAccountsToggleButton = null;
+        webLoginButton = null;
     }
 
     private void destroyLoginWebView() {

@@ -8,6 +8,7 @@ material = "1.13.0"
 recyclerview = "1.4.0"
 room = "2.8.4"
 zxing = "3.5.4"
+json = "20251224"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -18,6 +19,7 @@ androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 junit = { module = "junit:junit", version = "4.13.2" }
+json = { module = "org.json:json", version.ref = "json" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
