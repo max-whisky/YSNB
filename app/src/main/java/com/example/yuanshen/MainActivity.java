@@ -101,6 +101,7 @@ public final class MainActivity extends AppCompatActivity {
     private MainViewModel viewModel;
     private FrameLayout screenContainer;
     private FrameLayout pageContainer;
+    private BottomNavigationView bottomNavigation;
     private AppScreen currentScreen;
     private int currentPageId = R.id.nav_overview;
     private int historyFilterPosition;
@@ -376,13 +377,13 @@ public final class MainActivity extends AppCompatActivity {
             public void onNothingSelected(android.widget.AdapterView<?> parent) {
             }
         });
-        BottomNavigationView navigation = root.findViewById(R.id.bottom_navigation);
-        navigation.setOnItemSelectedListener(item -> {
+        bottomNavigation = root.findViewById(R.id.bottom_navigation);
+        bottomNavigation.setOnItemSelectedListener(item -> {
             currentPageId = item.getItemId();
             renderCurrentPage();
             return true;
         });
-        navigation.setSelectedItemId(currentPageId);
+        bottomNavigation.setSelectedItemId(currentPageId);
         updateRoleSpinner();
         updateSyncState();
         renderCurrentPage();
@@ -507,7 +508,15 @@ public final class MainActivity extends AppCompatActivity {
         metrics.addView(createMetric("累计抽数", String.valueOf(total), style.getAccentColor()));
         content.addView(metrics);
         card.addView(content);
+        card.setOnClickListener(v -> openHistoryForPool(pool));
         return card;
+    }
+
+    private void openHistoryForPool(GachaPool pool) {
+        historyFilterPosition = pool.ordinal() + 1;
+        if (bottomNavigation != null) {
+            bottomNavigation.setSelectedItemId(R.id.nav_history);
+        }
     }
 
     private void renderHistoryPageV2() {
