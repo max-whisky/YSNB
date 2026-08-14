@@ -33,6 +33,7 @@ public final class GachaRecordAdapter extends RecyclerView.Adapter<RecyclerView.
     private final List<GachaRecord> records = new ArrayList<>();
     private final List<GachaPityTimelineCalculator.Entry> timeline = new ArrayList<>();
     private DisplayMode displayMode = DisplayMode.CARD;
+    private int pityCap;
 
     public void submitList(List<GachaRecord> newRecords) {
         submitCards(newRecords);
@@ -40,14 +41,19 @@ public final class GachaRecordAdapter extends RecyclerView.Adapter<RecyclerView.
 
     public void submitCards(List<GachaRecord> newRecords) {
         displayMode = DisplayMode.CARD;
+        pityCap = 0;
         records.clear();
         records.addAll(newRecords);
         timeline.clear();
         notifyDataSetChanged();
     }
 
-    public void submitPityTimeline(List<GachaPityTimelineCalculator.Entry> newTimeline) {
+    public void submitPityTimeline(
+            GachaPool pool,
+            List<GachaPityTimelineCalculator.Entry> newTimeline
+    ) {
         displayMode = DisplayMode.PITY;
+        pityCap = GachaPityTimelineCalculator.pityCap(pool);
         records.clear();
         timeline.clear();
         timeline.addAll(newTimeline);
@@ -81,7 +87,7 @@ public final class GachaRecordAdapter extends RecyclerView.Adapter<RecyclerView.
         } else if (holder instanceof YearViewHolder) {
             ((YearViewHolder) holder).bind(timeline.get(position));
         } else if (holder instanceof PityViewHolder) {
-            ((PityViewHolder) holder).bind(timeline.get(position));
+            ((PityViewHolder) holder).bind(timeline.get(position), pityCap);
         }
     }
 
@@ -171,12 +177,12 @@ public final class GachaRecordAdapter extends RecyclerView.Adapter<RecyclerView.
                     updateFillWidth());
         }
 
-        void bind(GachaPityTimelineCalculator.Entry entry) {
+        void bind(GachaPityTimelineCalculator.Entry entry, int pityCap) {
             boolean current = entry.getType()
                     == GachaPityTimelineCalculator.Entry.Type.CURRENT_PITY;
             GachaRecord record = entry.getRecord();
             pullCount = entry.getPullCount();
-            pityCap = GachaPityTimelineCalculator.pityCap();
+            this.pityCap = pityCap;
             offBanner = entry.isOffBanner();
 
             avatar.setText(current ? "?" : firstCharacter(record.getName()));

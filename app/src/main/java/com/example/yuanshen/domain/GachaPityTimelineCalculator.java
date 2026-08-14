@@ -63,8 +63,19 @@ public final class GachaPityTimelineCalculator {
         return timeline;
     }
 
-    public static int pityCap() {
-        return 90;
+    public static int pityCap(GachaPool pool) {
+        Objects.requireNonNull(pool, "pool");
+        switch (pool) {
+            case WEAPON_EVENT:
+                return 80;
+            case CHARACTER_EVENT:
+            case STANDARD:
+            case CHRONICLED:
+                return 90;
+            case NOVICE:
+            default:
+                return 0;
+        }
     }
 
     public static PullColorTier colorTierFor(int pullCount) {

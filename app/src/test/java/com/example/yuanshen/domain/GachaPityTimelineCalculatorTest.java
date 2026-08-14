@@ -74,8 +74,12 @@ public final class GachaPityTimelineCalculatorTest {
     }
 
     @Test
-    public void usesNinetyPullCapForEveryPool() {
-        assertEquals(90, GachaPityTimelineCalculator.pityCap());
+    public void usesPoolSpecificPityCaps() {
+        assertEquals(90, GachaPityTimelineCalculator.pityCap(GachaPool.CHARACTER_EVENT));
+        assertEquals(80, GachaPityTimelineCalculator.pityCap(GachaPool.WEAPON_EVENT));
+        assertEquals(90, GachaPityTimelineCalculator.pityCap(GachaPool.STANDARD));
+        assertEquals(0, GachaPityTimelineCalculator.pityCap(GachaPool.NOVICE));
+        assertEquals(90, GachaPityTimelineCalculator.pityCap(GachaPool.CHRONICLED));
     }
 
     @Test

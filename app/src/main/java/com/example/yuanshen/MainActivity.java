@@ -660,9 +660,11 @@ public final class MainActivity extends AppCompatActivity {
                     index == 0 ? null : pools[index - 1], index == historyFilterPosition);
         }
 
-        boolean canSwitchDisplay = historyFilterPosition > 0;
+        boolean hasSelectedPool = historyFilterPosition > 0;
+        GachaPool selectedPool = hasSelectedPool ? pools[historyFilterPosition - 1] : null;
+        boolean canSwitchDisplay = selectedPool != null
+                && GachaPityTimelineCalculator.pityCap(selectedPool) > 0;
         displayModeContainer.setVisibility(canSwitchDisplay ? View.VISIBLE : View.GONE);
-        GachaPool selectedPool = canSwitchDisplay ? pools[historyFilterPosition - 1] : null;
         styleHistoryDisplayMode(cardMode, selectedPool,
                 historyDisplayMode == GachaRecordAdapter.DisplayMode.CARD);
         styleHistoryDisplayMode(pityMode, selectedPool,
@@ -670,7 +672,7 @@ public final class MainActivity extends AppCompatActivity {
 
         List<GachaRecord> filtered = filterRecords(historyFilterPosition);
         if (canSwitchDisplay && historyDisplayMode == GachaRecordAdapter.DisplayMode.PITY) {
-            adapter.submitPityTimeline(
+            adapter.submitPityTimeline(selectedPool,
                     GachaPityTimelineCalculator.calculate(selectedPool, filtered));
         } else {
             adapter.submitCards(filtered);
